@@ -66,52 +66,16 @@ def busy_click(btn):
             click_finished = True
         except WebDriverException as e:
             print 'go on click',e
-            
+
+def start_slave(req):
+    from multiprocessing import Process
+    import slave_flush
+    
+    slave_process = Process(target=slave_flush.slave_flush,args=(req,))
+    slave_process.start()
         
-    
-if __name__ == "__main__":
 
-    
-    ticket_id={}
-    ticket_id['G1935']='4f000G193807'
-    ticket_id['G1973']='77000G197602'
-    ticket_id['G455']='490000G45808'
-    ticket_id['G1235']='11000G123408'
-    ticket_id['G1231']='12000G12300B'
-    ticket_id['G169']='240000G16900'
-
-    import require_config
-    req = require_config.req
-    
-    
-    
-
-    
-    
-    
-    starttime = time.ctime()
-    dr  = webdriver.Chrome()
-    dr.maximize_window()
-    url='https://kyfw.12306.cn/otn/leftTicket/init'
-    dr.get(url)
-
-
-    loginbtn = busy_find_first_element(dr,'//*[@id="login_user"]')
-    loginbtn.click()
-
-    username = busy_find_first_element(dr,'//*[@id="username"]')
-    username.send_keys(require_config.username)
-    password = busy_find_first_element(dr,'//*[@id="password"]')
-    password.send_keys(require_config.password)
-
-
-    print '1. login(just click the capcha and login button)'
-
-    while True:
-        cmd= raw_input('[g]o on? ')
-        if cmd=='g' or cmd=='G':
-            break
-
+def flush_after_login(dr, req):
     booktickets = busy_find_first_element(dr,'//*[@id="selectYuding"]/a')
     booktickets.click()
     
@@ -156,10 +120,11 @@ if __name__ == "__main__":
         searchbtn=busy_find_first_element(dr,'//*[@id="query_ticket"]')
         busy_click(searchbtn)
         #init train ticket id        
-        print 'get_ticket_id_map',require_config.train_num_arr
-        ticket_id_map = get_ticket_id_map(dr, require_config.train_num_arr)
+        print 'get_ticket_id_map',req['train_num_arr']
+        ticket_id_map = get_ticket_id_map(dr, req['train_num_arr'])
         req['ticket_id'] = ticket_id_map
         print 'req',req
+
     
     round=0
     bookbtn = None
@@ -181,7 +146,7 @@ if __name__ == "__main__":
         ticket_id = req['ticket_id']
         for key in ticket_id:
             tr_g1935 = busy_find_first_element(dr,'//*[@id="ticket_'+ticket_id[key]+'"]')
-            g1935 = busy_find_first_element(tr_g1935,'//*[@id="' + require_config.seat_level_prefix + ticket_id[key] + '"]')
+            g1935 = busy_find_first_element(tr_g1935,'//*[@id="' + req['seat_level_prefix']+ ticket_id[key] + '"]')
             if g1935.text!=u'\u65e0':
                 print '============================================================='+key
                 bookbtn = busy_find_first_element(tr_g1935,'./td[13]/a')
@@ -202,13 +167,59 @@ if __name__ == "__main__":
             final_check_passanger()
             real_submit = busy_find_first_element(dr,'//*[@id="qr_submit_id"]')
             busy_click(real_submit)
-        print 'start time:', starttime    
         print 'got time:', time.ctime()
         alarm_fourbeep(4)
         while True:
             cmd= raw_input('[e]xit? ')
             if cmd=='e' or cmd=='E':
                 break
+def dump_cookies(webdriver):
+    cookies_obj = webdriver.get_cookies()
+    import json
+    cookies_json = json.dumps(cookies_obj)
+    cookies_file = open('cookies.dat','w')
+    cookies_file.write(cookies_json)
+    cookies_file.close()
+if __name__ == "__main__":
+    concurrent = 0
+    if len(sys.argv) == 2:
+        concurrent = int(sys.argv[1])
+        print 'will start 1 master and',concurrent,'slaves'
+    import require_config
+    req = require_config.req
+    
+    starttime = time.ctime()
+    dr  = webdriver.Chrome()
+    dr.maximize_window()
+    url='https://kyfw.12306.cn/otn/leftTicket/init'
+    dr.get(url)
+
+
+    loginbtn = busy_find_first_element(dr,'//*[@id="login_user"]')
+    loginbtn.click()
+
+    username = busy_find_first_element(dr,'//*[@id="username"]')
+    username.send_keys(require_config.username)
+    password = busy_find_first_element(dr,'//*[@id="password"]')
+    password.send_keys(require_config.password)
+
+
+    print 'login(just click the capcha and login button)'
+
+    while True:
+        login_user = dr.find_element_by_id('login_user')
+        if login_user.text ==u'\u767b\u5f55':
+            print 'please login'
+            time.sleep(0.5)
+        else:
+            break
+        
+        
+        
+    dump_cookies(dr)
+    for i in range(concurrent):
+        start_slave(req)
+    flush_after_login(dr,req)
 
 
         

@@ -20,9 +20,11 @@ req['date']='2018-05-01'
 
 #possible train number
 train_num_arr=['G1935','G1973','G455','G1235','G1231','G169']
-
+#train_num_arr=['G1935']
+req['train_num_arr'] = train_num_arr
 #二等座：ZE_
 seat_level_prefix='ZE_'
+req['seat_level_prefix'] = seat_level_prefix
 
 #set passenger name in chinese character
 parr=[u'张三']
