@@ -169,6 +169,8 @@ def flush_after_login(dr, req):
             busy_click(real_submit)
         print 'got time:', time.ctime()
         alarm_fourbeep(4)
+        import remind_wechat
+        remind_wechat.remind_wechat()
         while True:
             cmd= raw_input('[e]xit? ')
             if cmd=='e' or cmd=='E':
