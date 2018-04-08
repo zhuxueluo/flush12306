@@ -4,25 +4,22 @@ from email.mime.text import MIMEText
 from email.header import Header
 import json
 
-def remind_mail():
-    #mail_host="smtp.163.com"
-    mail_host="smtp.126.com"
-
+def remind_email():
     mail_user='xxxx'
     mail_pass='xxxx'
-    mail_host='xxxx'
+    mail_host="xxxx"
 
-    sender = 'xxxx@xxxx'
-    receivers = ['yyyy@yyyy']
+    sender = 'realsender@smtpserver'
+    receivers = ['realreceiver@anothersmtpserver']
 
 
     mail_msg = u"""
     Hi, flushed ticket. Hurry to pay it.
     """
     message = MIMEText(mail_msg, 'plain', 'utf-8')
-    message['From'] = Header(u"just_claim_who_write@xxxx", 'utf-8')
+    message['From'] = Header(u"claimed_sender_in_mail_content@claimedserver", 'utf-8')
     # the From doesnot need to be the same as the sender(user who logins to smtp server)
-    message['To'] =  Header(u"just_claim_who_sendto@yyyy", 'utf-8')
+    message['To'] =  Header(u"claimed_receiver_in_mail_content@claimedserver2", 'utf-8')
     message['Subject'] = Header(u'Flush 12306 successfully', 'utf-8')
 
 
