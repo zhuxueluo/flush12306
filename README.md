@@ -16,4 +16,7 @@ after booking ticket, pay the bill
 ## road map
 concurrently running--seems not work, because the cookies change
 
+wechat remind
+
+email remind after successfully getting ticket // TODO
 
