@@ -8,7 +8,7 @@ import beepalarm
 from beepalarm import alarm_fourbeep
 from beepalarm import alarm_twobeep
 '''config tickets set to auto'''
-def busy_find_first_element(dr,xpath):
+def busy_find_all_element(dr,xpath):
     first = None
     '''about 6s if round=200'''
     tries=200
@@ -21,9 +21,12 @@ def busy_find_first_element(dr,xpath):
             round = 0
         elements = dr.find_elements_by_xpath(xpath)
         if(len(elements)>0):
-            first = elements[0]
+            #first = elements[0]
             break
-    return first
+    return elements
+def busy_find_first_element(dr,xpath):
+    elements = busy_find_all_element(dr,xpath)
+    return elements[0]
     
     
     
@@ -74,7 +77,33 @@ def start_slave(req):
     slave_process = Process(target=slave_flush.slave_flush,args=(req,))
     slave_process.start()
         
-
+def check_passenger(dr,req):
+    passer_labels_xpath = '//*[@id="normal_passenger_id"]/li/label'
+    passer_checkboxes_xpath = '//*[@id="normal_passenger_id"]/li/input'
+    passer_labels = busy_find_all_element(dr,passer_labels_xpath)
+    passer_checkboxes = busy_find_all_element(dr,passer_checkboxes_xpath)
+    chebox_index = -1
+    for idx in range(len(passer_labels)):
+        if passer_labels[idx].text==req['passengers']:
+            chebox_index = idx
+            break
+    if chebox_index > -1:
+        passer_checkboxes[chebox_index].click()
+    else:
+        raise Exception,"not found passenger "+req['passengers']
+'''keep clicking confirm btn until the msgbox dismiss'''
+def keep_clicking_till_done(real_submit_btn, dr):
+    while True:
+        try:
+            real_submit_btn.click()
+        except Exception as ex:
+            pass
+        try:
+            dr.find_element_by_id('content_checkticketinfo_id')
+        except Exception as e:
+            print 'content_checkticketinfo_id dismissed, meaning clicked confirmed'
+            break
+        time.sleep(0.1)
 def flush_after_login(dr, req):
     booktickets = busy_find_first_element(dr,'//*[@id="selectYuding"]/a')
     booktickets.click()
@@ -158,19 +187,26 @@ def flush_after_login(dr, req):
     if bookbtn!= None:
         
         bookbtn.click()
-        passenger = busy_find_first_element(dr,'//*[@id="normalPassenger_0"]')
-        passenger.click()
+        check_passenger(dr,req)
         passname = busy_find_first_element(dr,'//*[@id="passenger_name_1"]')
-        if passname.get_attribute('value')== u'\u6797\u78ca':
+        if passname.get_attribute('value')== req['passengers']:
             submit = busy_find_first_element(dr,'//*[@id="submitOrder_id"]')
             submit.click()
             final_check_passanger()
             real_submit = busy_find_first_element(dr,'//*[@id="qr_submit_id"]')
-            busy_click(real_submit)
+            keep_clicking_till_done(real_submit,dr)
         print 'got time:', time.ctime()
         alarm_fourbeep(4)
-        import remind_wechat
-        remind_wechat.remind_wechat()
+        try:
+            import remind_wechat
+            remind_wechat.remind_wechat()
+        except Exception as e1:
+            pass
+        try:
+            import remind_email
+            remind_email.remind_email()
+        except Exception as e2:
+            pass
         while True:
             cmd= raw_input('[e]xit? ')
             if cmd=='e' or cmd=='E':

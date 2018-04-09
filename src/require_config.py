@@ -10,10 +10,10 @@ password = ''
 req = {}
 
 #start station
-req['from']=u'\u5f90\u5dde'
+req['from']=u'出发地'
 
 #destination station
-req['to']=u'\u82cf\u5dde'
+req['to']=u'目的地'
 
 #onboard date
 req['date']='2018-05-01'
@@ -26,6 +26,5 @@ req['train_num_arr'] = train_num_arr
 seat_level_prefix='ZE_'
 req['seat_level_prefix'] = seat_level_prefix
 
-#set passenger name in chinese character
-parr=[u'张三']
-req['passengers']=parr
+#set passenger name in chinese character, for now support only one passenger
+req['passengers']=u'张三'
