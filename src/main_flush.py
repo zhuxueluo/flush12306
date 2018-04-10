@@ -211,6 +211,7 @@ def flush_after_login(dr, req):
             cmd= raw_input('[e]xit? ')
             if cmd=='e' or cmd=='E':
                 break
+        dr.quit()
 def dump_cookies(webdriver):
     cookies_obj = webdriver.get_cookies()
     import json
@@ -218,16 +219,23 @@ def dump_cookies(webdriver):
     cookies_file = open('cookies.dat','w')
     cookies_file.write(cookies_json)
     cookies_file.close()
-if __name__ == "__main__":
+
+def main(argv):
     concurrent = 0
-    if len(sys.argv) == 2:
-        concurrent = int(sys.argv[1])
+    if argv and len(argv) == 1:
+        concurrent = int(argv[0])
         print 'will start 1 master and',concurrent,'slaves'
     import require_config
     req = require_config.req
     
     starttime = time.ctime()
-    dr  = webdriver.Chrome()
+    #opts = {}
+    #opts['webdriver.log.browser.ignore']=True
+    #opts['webdriver.log.driver.ignore']=True
+    #desired_capabilities={'loggingPrefs': {'profiler': 'INFO'}}
+    #dr  = webdriver.Chrome(desired_capabilities={'loggingPrefs': {'performance': 'OFF','driver': 'OFF','browser': 'OFF','server': 'OFF','client': 'OFF'}})
+    dr  = webdriver.Chrome(executable_path='start_chrome_driver.bat',service_args=[ '>nul 2>&1'])
+    #dr  = webdriver.Chrome()
     dr.maximize_window()
     url='https://kyfw.12306.cn/otn/leftTicket/init'
     dr.get(url)
@@ -259,7 +267,9 @@ if __name__ == "__main__":
         start_slave(req)
     flush_after_login(dr,req)
 
-
+if __name__ == "__main__":
+    main(sys.argv[1:])
+    
         
         
         
